@@ -57,6 +57,34 @@ document.addEventListener('DOMContentLoaded', function() {
             learningGallery.appendChild(galleryItem);
         });
     }
+
+     // 从GitHub Pages加载学习成果
+    async function loadLearningOutcomesFromGitHub() {
+        try {
+            // 假设数据文件在 https://你的用户名.github.io/blender-tutorial-notes/data/learning-outcomes.json
+            const response = await fetch('./data/learning-outcomes.json');
+            if (response.ok) {
+                return await response.json();
+            } else {
+                throw new Error('数据文件不存在');
+            }
+        } catch (error) {
+            console.error('从GitHub加载失败:', error);
+            // 回退到localStorage
+            return JSON.parse(localStorage.getItem('learningOutcomes')) || [];
+        }
+    }
+
+    // 修改保存逻辑 - 只能保存到localStorage，需要手动同步到GitHub
+    function exportLearningOutcomes() {
+        const dataStr = JSON.stringify(learningOutcomes, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = 'learning-outcomes.json';
+        link.click();
+    }
     
     // 导航按钮点击事件
     navButtons.forEach(button => {
@@ -536,4 +564,5 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('请输入标题并上传图片');
         }
     });
+
 });
