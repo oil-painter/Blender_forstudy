@@ -85,6 +85,12 @@ document.addEventListener('DOMContentLoaded', function() {
         link.download = 'learning-outcomes.json';
         link.click();
     }
+
+    // 添加导出按钮事件
+    const exportData = document.getElementById('exportData');
+    exportData.addEventListener('click', function() {
+        exportLearningOutcomes();
+    });
     
     // 导航按钮点击事件
     navButtons.forEach(button => {
@@ -566,3 +572,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 });
+
