@@ -48,16 +48,88 @@ document.addEventListener('DOMContentLoaded', function() {
             const galleryItem = document.createElement('div');
             galleryItem.className = 'gallery-item';
             galleryItem.setAttribute('data-title', outcome.title.toLowerCase());
+            galleryItem.setAttribute('data-index', index); // 添加索引属性
+            
             galleryItem.innerHTML = `
                 <img src="${outcome.image}" alt="${outcome.title}">
                 <div class="gallery-item-content">
                     <div class="gallery-item-title">${outcome.title}</div>
+                    <div class="gallery-item-actions">
+                        <button class="btn-edit" data-index="${index}">编辑</button>
+                        <button class="btn-delete" data-index="${index}">删除</button>
+                    </div>
                 </div>
             `;
             learningGallery.appendChild(galleryItem);
         });
+        
+        // 添加删除和编辑事件监听
+        addCardEventListeners();
     }
 
+    // 为卡片添加编辑和删除事件监听
+    function addCardEventListeners() {
+        // 删除按钮事件
+        document.querySelectorAll('.btn-delete').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.stopPropagation(); // 防止事件冒泡
+                const index = parseInt(this.getAttribute('data-index'));
+                deleteLearningOutcome(index);
+            });
+        });
+        
+        // 编辑按钮事件
+        document.querySelectorAll('.btn-edit').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.stopPropagation(); // 防止事件冒泡
+                const index = parseInt(this.getAttribute('data-index'));
+                editLearningOutcome(index);
+            });
+        });
+    }
+
+    // 删除学习成果
+    function deleteLearningOutcome(index) {
+        if (confirm('确定要删除这个学习成果吗？')) {
+            // 从数组中删除指定项
+            learningOutcomes.splice(index, 1);
+            
+            // 更新本地存储
+            localStorage.setItem('learningOutcomes', JSON.stringify(learningOutcomes));
+            
+            // 重新渲染
+            renderLearningOutcomes();
+            
+            // 更新搜索项
+            updateSearchableItems();
+            
+            alert('删除成功！');
+        }
+    }
+
+    // 编辑学习成果
+    function editLearningOutcome(index) {
+        const outcome = learningOutcomes[index];
+        
+        // 填充表单数据
+        outcomeTitle.value = outcome.title;
+        outcomeImagePreview.src = outcome.image;
+        outcomeImagePreview.style.display = 'block';
+        uploadedImage = outcome.image;
+        
+        // 显示编辑模态框
+        learningOutcomeModal.style.display = 'flex';
+        
+        // 临时存储当前编辑的索引
+        learningOutcomeModal.setAttribute('data-editing-index', index);
+        
+        // 修改模态框标题
+        document.querySelector('#learningOutcomeModal .modal-title').textContent = '编辑学习成果';
+        
+        // 修改保存按钮文本
+        saveLearningOutcome.textContent = '更新';
+    }
+    
      // 从GitHub Pages加载学习成果
     async function loadLearningOutcomesFromGitHub() {
         try {
@@ -542,20 +614,30 @@ document.addEventListener('DOMContentLoaded', function() {
             reader.readAsDataURL(file);
         }
     });
-    
+
     // 保存学习成果
     saveLearningOutcome.addEventListener('click', function() {
         const title = outcomeTitle.value;
+        const editingIndex = learningOutcomeModal.getAttribute('data-editing-index');
         
         if (title && uploadedImage) {
-            // 创建学习成果数据
-            const newOutcome = {
-                title: title,
-                image: uploadedImage
-            };
+            if (editingIndex !== null) {
+                // 编辑模式 - 更新现有项
+                const index = parseInt(editingIndex);
+                learningOutcomes[index] = {
+                    title: title,
+                    image: uploadedImage
+                };
+            } else {
+                // 添加模式 - 创建新项
+                const newOutcome = {
+                    title: title,
+                    image: uploadedImage
+                };
+                learningOutcomes.push(newOutcome);
+            }
             
-            // 添加到存储
-            learningOutcomes.push(newOutcome);
+            // 更新本地存储
             localStorage.setItem('learningOutcomes', JSON.stringify(learningOutcomes));
             
             // 重新渲染
@@ -566,10 +648,37 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // 关闭模态框
             learningOutcomeModal.style.display = 'none';
+            
+            // 重置编辑状态
+            resetEditState();
         } else {
             alert('请输入标题并上传图片');
         }
     });
 
+    // 重置编辑状态
+    function resetEditState() {
+        learningOutcomeModal.removeAttribute('data-editing-index');
+        document.querySelector('#learningOutcomeModal .modal-title').textContent = '添加学习成果';
+        saveLearningOutcome.textContent = '保存';
+        outcomeTitle.value = '';
+        outcomeImagePreview.style.display = 'none';
+        uploadedImage = null;
+    }
+
+    // 添加学习成果按钮点击事件
+    addLearningOutcome.addEventListener('click', function() {
+        learningOutcomeModal.style.display = 'flex';
+        resetEditState(); // 重置为添加模式
+    });
+
+    // 关闭学习成果模态框
+    closeOutcomeModal.addEventListener('click', function() {
+        learningOutcomeModal.style.display = 'none';
+        resetEditState(); // 重置编辑状态
+    });
+
+
 });
+
 
