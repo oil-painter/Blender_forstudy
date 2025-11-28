@@ -268,23 +268,31 @@ document.addEventListener('DOMContentLoaded', function() {
         allTextElements.forEach(element => {
             const text = element.textContent.trim();
             if (text.length > 0) {
-                searchableItems.push({
-                    element: element,
-                    text: text,
-                    section: element.closest('.content-section').id
-                });
+                // 安全检查：确保元素在内容区域内
+                const contentSection = element.closest('.content-section');
+                if (contentSection && contentSection.id) {
+                    searchableItems.push({
+                        element: element,
+                        text: text,
+                        section: contentSection.id
+                    });
+                }
+                // 如果不在内容区域内，静默跳过
             }
         });
         
         // 收集学习成果
         document.querySelectorAll('#learningGallery .gallery-item').forEach(item => {
-            const title = item.querySelector('.gallery-item-title').textContent;
-            
-            searchableItems.push({
-                element: item,
-                text: title,
-                section: 'gallery'
-            });
+            const titleElement = item.querySelector('.gallery-item-title');
+            if (titleElement) {
+                const title = titleElement.textContent;
+                
+                searchableItems.push({
+                    element: item,
+                    text: title,
+                    section: 'gallery'
+                });
+            }
         });
     }
     
@@ -688,6 +696,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 });
+
 
 
 
