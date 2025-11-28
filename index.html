@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blender入门教程学习笔记</title>
+    <style>
+        :root {
+            --primary-color: #4b6cb7;
+            --secondary-color: #182848;
+            --accent-color: #ffcc00;
+            --light-bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-radius: 10px;
+            --shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            background-color: var(--card-bg);
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover, .nav-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .nav-btn.add-section {
+            background-color: #ffeaa7;
+            border-color: #fdcb6e;
+        }
+        
+        .search-container {
+            padding: 20px;
+            background-color: #f0f4ff;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .search-box {
+            display: flex;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px 0 0 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        .search-box button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .search-box button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .search-results {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .search-result-item {
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .search-result-item:hover {
+            background-color: #e6eeff;
+        }
+        
+        .content-section {
+            display: none;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .section-title {
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eaeaea;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 25px;
+            background-color: var(--primary-color);
+            margin-right: 12px;
+            border-radius: 4px;
+        }
+        
+        .subsection-title {
+            color: var(--secondary-color);
+            font-size: 1.3rem;
+            margin: 25px 0 15px;
+            padding-left: 15px;
+            border-left: 4px solid var(--primary-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .subsection-title::after {
+            content: "−";
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+        
+        .subsection-title.collapsed::after {
+            content: "+";
+        }
+        
+        .subsection-content {
+            margin-left: 20px;
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+        
+        .subsection-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+        
+        /* 三级标题样式 */
+        .subsubsection-title {
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+            margin: 15px 0 10px;
+            padding-left: 40px;
+            border-left: 3px solid #a0b4e0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .subsubsection-title::after {
+            content: "−";
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+        
+        .subsubsection-title.collapsed::after {
+            content: "+";
+        }
+        
+        /* 三级内容样式 */
+        .subsubsection-content {
+            margin-left: 40px;
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+        
+        .subsubsection-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+        
+        .key-point {
+            margin-bottom: 25px;
+        }
+        
+        .key-point h3 {
+            color: var(--secondary-color);
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .key-point h3 .number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+        
+        ul {
+            list-style-type: none;
+            padding-left: 5px;
+        }
+        
+        li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        li::before {
+            content: "•";
+            color: var(--primary-color);
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        .shortcut {
+            background-color: #eef2ff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin: 5px 0;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: var(--primary-color);
+            display: inline-block;
+        }
+        
+        .workflow-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .step-card {
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            padding: 25px 15px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: var(--shadow);
+        }
+        
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .step-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .step-desc {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .shortcut-category {
+            margin-bottom: 30px;
+        }
+        
+        .shortcut-category h3 {
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #ccc;
+        }
+        
+        .shortcut-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background-color: #f8faff;
+            border-radius: 6px;
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .shortcut-desc {
+            font-weight: 500;
+        }
+        
+        .highlight {
+            background-color: #fffacd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        
+        .back-btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+        
+        .kur-tips {
+            background-color: #fff9e6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        /* 学习成果样式 */
+        .learning-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .gallery-item {
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .gallery-item-content {
+            padding: 15px;
+        }
+        
+        .gallery-item-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+        }
+        
+        .gallery-item-desc {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        /* 模态窗口样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-secondary {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #d0d0d0;
+        }
+        
+        /* 图片上传样式 */
+        .image-upload-container {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        
+        .image-upload-container:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .image-upload-container.dragover {
+            border-color: var(--primary-color);
+            background-color: #f0f4ff;
+        }
+        
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #ccc;
+        }
+        
+        .upload-text {
+            margin-bottom: 15px;
+        }
+        
+        .upload-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .upload-btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        /* 右键菜单样式 */
+        .context-menu {
+            display: none;
+            position: absolute;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            min-width: 150px;
+        }
+        
+        .context-menu-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .context-menu-item:hover {
+            background-color: #f0f4ff;
+        }
+        
+        .context-menu-item.delete {
+            color: #e74c3c;
+        }
+        
+        @media (max-width: 768px) {
+            .workflow-steps {
+                flex-direction: column;
+            }
+            
+            .step-card {
+                min-width: 100%;
+            }
+            
+            .shortcut-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .subsection-title {
+                font-size: 1.1rem;
+            }
+            
+            .learning-gallery {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Blender入门教程</h1>
+            <p class="subtitle">Kurt教程学习笔记</p>
+        </header>
+        
+        <nav>
+            <button class="nav-btn active" data-target="home">首页</button>
+            <button class="nav-btn" data-target="modeling">建模</button>
+            <button class="nav-btn" data-target="lighting">布光</button>
+            <button class="nav-btn" data-target="material">材质</button>
+            <button class="nav-btn" data-target="rendering">渲染</button>
+            <button class="nav-btn" data-target="gallery">学习成果</button>
+            <button class="nav-btn add-section" id="addSectionBtn">+ 新增板块</button>
+        </nav>
+        
+        <!-- 右键菜单 -->
+        <div class="context-menu" id="contextMenu">
+            <div class="context-menu-item" id="renameSection">重命名</div>
+            <div class="context-menu-item delete" id="deleteSection">删除</div>
+        </div>
+        
+        <!-- 新增板块模态框 -->
+        <div class="modal" id="addSectionModal">
+            <div class="modal-content">
+                <h2 class="modal-title">新增板块</h2>
+                <div class="form-group">
+                    <label for="newSectionName">板块名称</label>
+                    <input type="text" id="newSectionName" placeholder="输入板块名称">
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" id="closeSectionModal">取消</button>
+                    <button class="btn btn-primary" id="addNewSection">添加</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 重命名模态框 -->
+        <div class="modal" id="renameModal">
+            <div class="modal-content">
+                <h2 class="modal-title">重命名板块</h2>
+                <div class="form-group">
+                    <label for="renameSectionName">新名称</label>
+                    <input type="text" id="renameSectionName" placeholder="输入新名称">
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" id="closeRenameModal">取消</button>
+                    <button class="btn btn-primary" id="confirmRename">确认</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 学习成果模态框 -->
+        <div class="modal" id="learningOutcomeModal">
+            <div class="modal-content">
+                <h2 class="modal-title">添加学习成果</h2>
+                <div class="form-group">
+                    <label for="outcomeTitle">成果标题</label>
+                    <input type="text" id="outcomeTitle" placeholder="输入学习成果标题">
+                </div>
+                <div class="form-group">
+                    <label>上传成果图片</label>
+                    <div class="image-upload-container" id="outcomeImageUpload">
+                        <div class="upload-icon">📁</div>
+                        <p class="upload-text">拖拽图片到这里或点击上传</p>
+                        <button class="upload-btn" id="outcomeUploadBtn">选择图片</button>
+                        <input type="file" id="outcomeImageInput" accept="image/*" style="display: none;">
+                        <img id="outcomeImagePreview" class="image-preview" src="" alt="预览">
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" id="closeOutcomeModal">取消</button>
+                    <button class="btn btn-primary" id="saveLearningOutcome">保存</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索快捷键、关键词或学习成果...">
+                <button id="searchButton">搜索</button>
+            </div>
+            <div class="search-results" id="searchResults"></div>
+        </div>
+        
+        <!-- 首页内容 -->
+        <section id="home" class="content-section active">
+            <h2 class="section-title">基础概念与工作流</h2>
+            
+            <div class="key-point">
+                <h3><span class="number">01</span> 重要概念</h3>
+                <ul>
+                    <li>窗口面板可拆分，可互换</li>
+                    <li>游标可以用来定位和输出点</li>
+                    <li>每个物体都有原点，在3D世界的计算机眼里，原点就是储存物体信息的数据点</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">基本 Workflow</h3>
+            <div class="workflow-steps">
+                <div class="step-card" data-target="modeling">
+                    <div class="step-icon">📐</div>
+                    <div class="step-title">建模</div>
+                    <div class="step-desc">创建3D模型的基本形状和结构</div>
+                </div>
+                <div class="step-card" data-target="lighting">
+                    <div class="step-icon">💡</div>
+                    <div class="step-title">布光</div>
+                    <div class="step-desc">设置场景中的光源和照明效果</div>
+                </div>
+                <div class="step-card" data-target="material">
+                    <div class="step-icon">🎨</div>
+                    <div class="step-title">材质</div>
+                    <div class="step-desc">为模型添加表面属性和纹理</div>
+                </div>
+                <div class="step-card" data-target="rendering">
+                    <div class="step-icon">📷</div>
+                    <div class="step-title">渲染</div>
+                    <div class="step-desc">生成最终的图像或动画</div>
+                </div>
+            </div>
+            
+            <div class="kur-tips">
+                <strong>KurTips:</strong> 记住基础概念有助于理解Blender的工作方式
+            </div>
+        </section>
+        
+        <!-- 建模板块 -->
+        <section id="modeling" class="content-section">
+            <h2 class="section-title">建模</h2>
+            
+            <div class="key-point">
+                <h3><span class="number">01</span> 建模基础</h3>
+                <ul>
+                    <li>了解基本几何体：立方体、球体、圆柱体等</li>
+                    <li>掌握编辑模式：顶点、边、面的编辑</li>
+                    <li>使用修改器：阵列、倒角、细分曲面等</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">快捷键大全</h3>
+            <div class="subsection-content">
+                <div class="shortcut-category">
+                    <h3 class="subsubsection-title">视图控制</h3>
+                    <div class="subsubsection-content">
+                        <div class="shortcut-grid">
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">旋转视角</span>
+                                <span class="shortcut">鼠标中键</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">平移视角</span>
+                                <span class="shortcut">Shift + 鼠标中键</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">缩放视角</span>
+                                <span class="shortcut">滚动鼠标中键</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">顶视图</span>
+                                <span class="shortcut">7</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">底视图</span>
+                                <span class="shortcut">Ctrl+7</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">前视图</span>
+                                <span class="shortcut">1</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">后视图</span>
+                                <span class="shortcut">Ctrl+1</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">右视图</span>
+                                <span class="shortcut">3</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">左视图</span>
+                                <span class="shortcut">Ctrl+3</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">反转当前视图</span>
+                                <span class="shortcut">9</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">切换摄像机视角</span>
+                                <span class="shortcut">0</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">切换摄像机和正交投影</span>
+                                <span class="shortcut">5</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">角度微调</span>
+                                <span class="shortcut">2,4,6,8</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">缩放微调</span>
+                                <span class="shortcut">+,-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="shortcut-category">
+                    <h3 class="subsubsection-title">物体控制</h3>
+                    <div class="subsubsection-content">
+                        <div class="shortcut-grid">
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">移动物体</span>
+                                <span class="shortcut">G</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">旋转物体</span>
+                                <span class="shortcut">R</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">缩放物体</span>
+                                <span class="shortcut">S</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">恢复移动</span>
+                                <span class="shortcut">Alt+G</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">恢复旋转</span>
+                                <span class="shortcut">Alt+R</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">恢复缩放</span>
+                                <span class="shortcut">Alt+S</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">精确移动</span>
+                                <span class="shortcut">G + Ctrl</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">按轴移动</span>
+                                <span class="shortcut">G + X/Y/Z</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">按面移动</span>
+                                <span class="shortcut">G + 两次X/Y/Z</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="shortcut-category">
+                    <h3 class="subsubsection-title">常用操作</h3>
+                    <div class="subsubsection-content">
+                        <div class="shortcut-grid">
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">新建物体</span>
+                                <span class="shortcut">Shift+A</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">复制物体</span>
+                                <span class="shortcut">Shift+D</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">删除物体</span>
+                                <span class="shortcut">X / Delete</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">隐藏物体</span>
+                                <span class="shortcut">H</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">显示隐藏物体</span>
+                                <span class="shortcut">Alt+H</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">隐藏未选中物体</span>
+                                <span class="shortcut">Shift+H</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">选择物体(刷选)</span>
+                                <span class="shortcut">C</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">全选</span>
+                                <span class="shortcut">A</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="shortcut-category">
+                    <h3 class="subsubsection-title">游标与窗口</h3>
+                    <div class="subsubsection-content">
+                        <div class="shortcut-grid">
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">调用游标Pie目录</span>
+                                <span class="shortcut">Shift+S</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">游标恢复到世界中心</span>
+                                <span class="shortcut">Shift+C</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">移动游标</span>
+                                <span class="shortcut">Shift+右键</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">最大化窗口</span>
+                                <span class="shortcut">Ctrl+空格</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="kur-tips">
+                    <strong>KurTips:</strong> 按住Shift可以加速或减速操作，记住常用快捷键可以大大提高工作效率
+                </div>
+            </div>
+            
+            <h3 class="subsection-title">建模技巧</h3>
+            <div class="subsection-content">
+                <ul>
+                    <li>使用参考图像辅助建模</li>
+                    <li>合理使用细分曲面修改器</li>
+                    <li>掌握环切工具(Ctrl+R)的使用</li>
+                    <li>了解网格拓扑的重要性</li>
+                </ul>
+            </div>
+            
+            <a href="#" class="back-btn" data-target="home">返回首页</a>
+        </section>
+        
+        <!-- 布光板块 -->
+        <section id="lighting" class="content-section">
+            <h2 class="section-title">布光</h2>
+            
+            <div class="key-point">
+                <h3><span class="number">01</span> 布光基础</h3>
+                <ul>
+                    <li>了解不同类型的光源：点光、日光、聚光灯等</li>
+                    <li>掌握三点照明法：主光、补光、背光</li>
+                    <li>学习使用HDRI环境贴图</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">布光技巧</h3>
+            <div class="subsection-content">
+                <ul>
+                    <li>使用区域光创建柔和阴影</li>
+                    <li>通过调整光强度、颜色和温度创造氛围</li>
+                    <li>利用光程控制实现特殊效果</li>
+                </ul>
+            </div>
+            
+            <a href="#" class="back-btn" data-target="home">返回首页</a>
+        </section>
+        
+        <!-- 材质板块 -->
+        <section id="material" class="content-section">
+            <h2 class="section-title">材质</h2>
+            
+            <div class="key-point">
+                <h3><span class="number">01</span> 材质基础</h3>
+                <ul>
+                    <li>了解BSDF着色器：原理化BSDF、光泽BSDF等</li>
+                    <li>掌握材质节点的连接方式</li>
+                    <li>学习使用纹理贴图：漫反射、法线、粗糙度等</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">材质技巧</h3>
+            <div class="subsection-content">
+                <ul>
+                    <li>使用混合着色器创建复杂材质</li>
+                    <li>通过映射和纹理坐标控制纹理位置</li>
+                    <li>利用程序纹理减少贴图依赖</li>
+                </ul>
+            </div>
+            
+            <a href="#" class="back-btn" data-target="home">返回首页</a>
+        </section>
+        
+        <!-- 渲染板块 -->
+        <section id="rendering" class="content-section">
+            <h2 class="section-title">渲染</h2>
+            
+            <div class="key-point">
+                <h3><span class="number">01</span> 渲染基础</h3>
+                <ul>
+                    <li>了解不同渲染引擎：Eevee、Cycles</li>
+                    <li>掌握渲染设置：采样、光照、输出等</li>
+                    <li>学习渲染层和合成器的使用</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">渲染技巧</h3>
+            <div class="subsection-content">
+                <ul>
+                    <li>使用降噪器提高渲染质量</li>
+                    <li>通过调整采样设置平衡渲染速度和质量</li>
+                    <li>利用渲染通道进行后期处理</li>
+                </ul>
+            </div>
+            
+            <a href="#" class="back-btn" data-target="home">返回首页</a>
+        </section>
+        
+        <!-- 学习成果板块 -->
+        <section id="gallery" class="content-section">
+            <h2 class="section-title">学习成果</h2>
+            
+            <button class="btn btn-primary" id="addLearningOutcome" style="margin-bottom: 20px;">添加学习成果</button>
+            
+            <div class="learning-gallery" id="learningGallery">
+                <!-- 动态添加的学习成果卡片将出现在这里 -->
+            </div>
+            
+            <a href="#" class="back-btn" data-target="home">返回首页</a>
+        </section>
+        
+        <!-- 动态添加的内容板块将出现在这里 -->
+        
+        <footer>
+            <p>Blender学习笔记 &copy; 2023 | 持续更新中</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 导航功能
+            let navButtons = document.querySelectorAll('.nav-btn');
+            let contentSections = document.querySelectorAll('.content-section');
+            const stepCards = document.querySelectorAll('.step-card');
+            const backButtons = document.querySelectorAll('.back-btn');
+            
+            // 新增功能变量
+            const addSectionBtn = document.getElementById('addSectionBtn');
+            const addSectionModal = document.getElementById('addSectionModal');
+            const closeSectionModal = document.getElementById('closeSectionModal');
+            const addNewSection = document.getElementById('addNewSection');
+            const newSectionName = document.getElementById('newSectionName');
+            const contextMenu = document.getElementById('contextMenu');
+            const renameSection = document.getElementById('renameSection');
+            const deleteSection = document.getElementById('deleteSection');
+            const renameModal = document.getElementById('renameModal');
+            const closeRenameModal = document.getElementById('closeRenameModal');
+            const confirmRename = document.getElementById('confirmRename');
+            const renameSectionName = document.getElementById('renameSectionName');
+            
+            // 学习成果功能变量
+            const addLearningOutcome = document.getElementById('addLearningOutcome');
+            const learningOutcomeModal = document.getElementById('learningOutcomeModal');
+            const closeOutcomeModal = document.getElementById('closeOutcomeModal');
+            const saveLearningOutcome = document.getElementById('saveLearningOutcome');
+            const outcomeTitle = document.getElementById('outcomeTitle');
+            const outcomeImageInput = document.getElementById('outcomeImageInput');
+            const outcomeImagePreview = document.getElementById('outcomeImagePreview');
+            const outcomeUploadBtn = document.getElementById('outcomeUploadBtn');
+            const outcomeImageUpload = document.getElementById('outcomeImageUpload');
+            
+            let currentContextButton = null;
+            let uploadedImage = null;
+            
+            // 存储学习成果数据
+            let learningOutcomes = JSON.parse(localStorage.getItem('learningOutcomes')) || [];
+            
+            // 初始化渲染学习成果
+            renderLearningOutcomes();
+            
+            // 渲染学习成果
+            function renderLearningOutcomes() {
+                const learningGallery = document.getElementById('learningGallery');
+                learningGallery.innerHTML = '';
+                
+                learningOutcomes.forEach((outcome, index) => {
+                    const galleryItem = document.createElement('div');
+                    galleryItem.className = 'gallery-item';
+                    galleryItem.setAttribute('data-title', outcome.title.toLowerCase());
+                    galleryItem.innerHTML = `
+                        <img src="${outcome.image}" alt="${outcome.title}">
+                        <div class="gallery-item-content">
+                            <div class="gallery-item-title">${outcome.title}</div>
+                        </div>
+                    `;
+                    learningGallery.appendChild(galleryItem);
+                });
+            }
+            
+            // 导航按钮点击事件
+            navButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    
+                    // 更新活动按钮
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 显示对应内容区域
+                    contentSections.forEach(section => {
+                        section.classList.remove('active');
+                        if (section.id === targetId) {
+                            section.classList.add('active');
+                        }
+                    });
+                    
+                    // 滚动到顶部
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+            
+            // 工作流程卡片点击事件
+            stepCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    
+                    // 更新活动按钮
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    document.querySelector(`.nav-btn[data-target="${targetId}"]`).classList.add('active');
+                    
+                    // 显示对应内容区域
+                    contentSections.forEach(section => {
+                        section.classList.remove('active');
+                        if (section.id === targetId) {
+                            section.classList.add('active');
+                        }
+                    });
+                    
+                    // 滚动到顶部
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+            
+            // 返回按钮点击事件
+            backButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('data-target');
+                    
+                    // 更新活动按钮
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    document.querySelector(`.nav-btn[data-target="${targetId}"]`).classList.add('active');
+                    
+                    // 显示对应内容区域
+                    contentSections.forEach(section => {
+                        section.classList.remove('active');
+                        if (section.id === targetId) {
+                            section.classList.add('active');
+                        }
+                    });
+                    
+                    // 滚动到顶部
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+            
+            // 折叠功能
+            const subsectionTitles = document.querySelectorAll('.subsection-title');
+            const subsubsectionTitles = document.querySelectorAll('.subsubsection-title');
+            
+            subsectionTitles.forEach(title => {
+                title.addEventListener('click', function() {
+                    const content = this.nextElementSibling;
+                    this.classList.toggle('collapsed');
+                    content.classList.toggle('collapsed');
+                });
+            });
+            
+            // 三级标题折叠功能
+            subsubsectionTitles.forEach(title => {
+                title.addEventListener('click', function() {
+                    const content = this.nextElementSibling;
+                    this.classList.toggle('collapsed');
+                    content.classList.toggle('collapsed');
+                });
+            });
+            
+            // 搜索功能
+            const searchInput = document.getElementById('searchInput');
+            const searchButton = document.getElementById('searchButton');
+            const searchResults = document.getElementById('searchResults');
+            const allTextElements = document.querySelectorAll('li, .kur-tips, .step-title, .step-desc, .subsection-title, .subsubsection-title, .shortcut-desc, .key-point h3, .section-title, .gallery-item-title');
+            
+            // 存储所有可搜索内容
+            let searchableItems = [];
+            
+            function updateSearchableItems() {
+                searchableItems = [];
+                
+                // 收集文本元素
+                allTextElements.forEach(element => {
+                    const text = element.textContent.trim();
+                    if (text.length > 0) {
+                        searchableItems.push({
+                            element: element,
+                            text: text,
+                            section: element.closest('.content-section').id
+                        });
+                    }
+                });
+                
+                // 收集学习成果
+                document.querySelectorAll('#learningGallery .gallery-item').forEach(item => {
+                    const title = item.querySelector('.gallery-item-title').textContent;
+                    
+                    searchableItems.push({
+                        element: item,
+                        text: title,
+                        section: 'gallery'
+                    });
+                });
+            }
+            
+            // 初始化搜索项
+            updateSearchableItems();
+            
+            // 搜索功能
+            function performSearch() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                searchResults.innerHTML = '';
+                
+                if (searchTerm === '') {
+                    searchResults.style.display = 'none';
+                    // 移除之前的高亮
+                    document.querySelectorAll('.highlight').forEach(el => {
+                        el.outerHTML = el.innerHTML;
+                    });
+                    return;
+                }
+                
+                // 查找匹配项
+                const matches = searchableItems.filter(item => 
+                    item.text.toLowerCase().includes(searchTerm)
+                );
+                
+                if (matches.length === 0) {
+                    searchResults.innerHTML = '<div class="search-result-item">未找到匹配项</div>';
+                    searchResults.style.display = 'block';
+                    return;
+                }
+                
+                // 显示搜索结果
+                matches.forEach(match => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'search-result-item';
+                    
+                    // 截取包含搜索词的部分
+                    const index = match.text.toLowerCase().indexOf(searchTerm);
+                    const start = Math.max(0, index - 20);
+                    const end = Math.min(match.text.length, index + searchTerm.length + 20);
+                    let preview = match.text.substring(start, end);
+                    
+                    if (start > 0) preview = '...' + preview;
+                    if (end < match.text.length) preview = preview + '...';
+                    
+                    // 高亮搜索词
+                    preview = preview.replace(
+                        new RegExp(searchTerm, 'gi'), 
+                        match => `<span class="highlight">${match}</span>`
+                    );
+                    
+                    resultItem.innerHTML = preview;
+                    
+                    // 点击结果跳转到对应位置
+                    resultItem.addEventListener('click', function() {
+                        // 切换到对应板块
+                        navButtons.forEach(btn => btn.classList.remove('active'));
+                        document.querySelector(`.nav-btn[data-target="${match.section}"]`).classList.add('active');
+                        
+                        contentSections.forEach(section => {
+                            section.classList.remove('active');
+                            if (section.id === match.section) {
+                                section.classList.add('active');
+                            }
+                        });
+                        
+                        // 确保折叠内容展开
+                        const subsectionTitle = match.element.closest('.subsection-content')?.previousElementSibling;
+                        if (subsectionTitle && subsectionTitle.classList.contains('subsection-title')) {
+                            subsectionTitle.classList.remove('collapsed');
+                            subsectionTitle.nextElementSibling.classList.remove('collapsed');
+                        }
+                        
+                        const subsubsectionTitle = match.element.closest('.subsubsection-content')?.previousElementSibling;
+                        if (subsubsectionTitle && subsubsectionTitle.classList.contains('subsubsection-title')) {
+                            subsubsectionTitle.classList.remove('collapsed');
+                            subsubsectionTitle.nextElementSibling.classList.remove('collapsed');
+                        }
+                        
+                        // 滚动到匹配元素
+                        setTimeout(() => {
+                            match.element.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'center' 
+                            });
+                            
+                            // 添加临时高亮
+                            const originalHTML = match.element.innerHTML;
+                            match.element.innerHTML = originalHTML.replace(
+                                new RegExp(searchTerm, 'gi'), 
+                                match => `<span class="highlight">${match}</span>`
+                            );
+                            
+                            // 3秒后移除高亮
+                            setTimeout(() => {
+                                match.element.innerHTML = originalHTML;
+                            }, 3000);
+                        }, 300);
+                        
+                        searchResults.style.display = 'none';
+                    });
+                    
+                    searchResults.appendChild(resultItem);
+                });
+                
+                searchResults.style.display = 'block';
+            }
+            
+            searchButton.addEventListener('click', performSearch);
+            
+            searchInput.addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    performSearch();
+                }
+            });
+            
+            // 点击页面其他地方关闭搜索结果
+            document.addEventListener('click', function(e) {
+                if (!searchResults.contains(e.target) && e.target !== searchInput && e.target !== searchButton) {
+                    searchResults.style.display = 'none';
+                }
+            });
+            
+            // 新增板块功能
+            addSectionBtn.addEventListener('click', function() {
+                addSectionModal.style.display = 'flex';
+            });
+            
+            closeSectionModal.addEventListener('click', function() {
+                addSectionModal.style.display = 'none';
+            });
+            
+            addNewSection.addEventListener('click', function() {
+                const sectionName = newSectionName.value.trim();
+                if (sectionName) {
+                    // 生成ID
+                    const sectionId = 'section-' + Date.now();
+                    
+                    // 创建导航按钮
+                    const navButton = document.createElement('button');
+                    navButton.className = 'nav-btn';
+                    navButton.setAttribute('data-target', sectionId);
+                    navButton.textContent = sectionName;
+                    
+                    // 添加右键事件监听
+                    navButton.addEventListener('contextmenu', function(e) {
+                        e.preventDefault();
+                        currentContextButton = this;
+                        contextMenu.style.display = 'block';
+                        contextMenu.style.left = e.pageX + 'px';
+                        contextMenu.style.top = e.pageY + 'px';
+                    });
+                    
+                    // 添加到导航栏
+                    addSectionBtn.parentNode.insertBefore(navButton, addSectionBtn);
+                    
+                    // 创建内容区域
+                    const contentSection = document.createElement('section');
+                    contentSection.id = sectionId;
+                    contentSection.className = 'content-section';
+                    contentSection.innerHTML = `
+                        <h2 class="section-title">${sectionName}</h2>
+                        <div class="key-point">
+                            <h3><span class="number">01</span> ${sectionName}基础</h3>
+                            <ul>
+                                <li>这里是${sectionName}的基础内容</li>
+                                <li>您可以根据需要添加更多内容</li>
+                            </ul>
+                        </div>
+                        <a href="#" class="back-btn" data-target="home">返回首页</a>
+                    `;
+                    
+                    // 添加到页面
+                    document.querySelector('footer').parentNode.insertBefore(contentSection, document.querySelector('footer'));
+                    
+                    // 为新增的导航按钮添加点击事件
+                    navButton.addEventListener('click', function() {
+                        const targetId = this.getAttribute('data-target');
+                        
+                        // 更新活动按钮
+                        navButtons.forEach(btn => btn.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        // 显示对应内容区域
+                        contentSections.forEach(section => {
+                            section.classList.remove('active');
+                            if (section.id === targetId) {
+                                section.classList.add('active');
+                            }
+                        });
+                        
+                        // 滚动到顶部
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                    
+                    // 为新增的返回按钮添加事件
+                    contentSection.querySelector('.back-btn').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        document.querySelector('.nav-btn[data-target="home"]').click();
+                    });
+                    
+                    // 更新导航按钮和内容区域的引用
+                    navButtons = document.querySelectorAll('.nav-btn');
+                    contentSections = document.querySelectorAll('.content-section');
+                    
+                    // 清空表单并关闭模态框
+                    newSectionName.value = '';
+                    addSectionModal.style.display = 'none';
+                } else {
+                    alert('请输入板块名称');
+                }
+            });
+            
+            // 右键菜单功能
+            renameSection.addEventListener('click', function() {
+                if (currentContextButton) {
+                    renameSectionName.value = currentContextButton.textContent;
+                    renameModal.style.display = 'flex';
+                    contextMenu.style.display = 'none';
+                }
+            });
+            
+            deleteSection.addEventListener('click', function() {
+                if (currentContextButton && confirm('确定要删除这个板块吗？')) {
+                    const targetId = currentContextButton.getAttribute('data-target');
+                    
+                    // 删除导航按钮
+                    currentContextButton.remove();
+                    
+                    // 删除内容区域
+                    const contentSection = document.getElementById(targetId);
+                    if (contentSection) {
+                        contentSection.remove();
+                    }
+                    
+                    // 重置活动按钮到首页
+                    document.querySelector('.nav-btn[data-target="home"]').click();
+                    
+                    contextMenu.style.display = 'none';
+                }
+            });
+            
+            closeRenameModal.addEventListener('click', function() {
+                renameModal.style.display = 'none';
+            });
+            
+            confirmRename.addEventListener('click', function() {
+                const newName = renameSectionName.value.trim();
+                if (newName && currentContextButton) {
+                    // 更新导航按钮文本
+                    currentContextButton.textContent = newName;
+                    
+                    // 更新内容区域的标题
+                    const targetId = currentContextButton.getAttribute('data-target');
+                    const contentSection = document.getElementById(targetId);
+                    if (contentSection) {
+                        const titleElement = contentSection.querySelector('.section-title');
+                        if (titleElement) {
+                            titleElement.textContent = newName;
+                        }
+                    }
+                    
+                    renameModal.style.display = 'none';
+                } else {
+                    alert('请输入新名称');
+                }
+            });
+            
+            // 点击页面其他地方关闭右键菜单
+            document.addEventListener('click', function() {
+                contextMenu.style.display = 'none';
+            });
+            
+            // 学习成果功能
+            addLearningOutcome.addEventListener('click', function() {
+                learningOutcomeModal.style.display = 'flex';
+                // 重置表单
+                outcomeTitle.value = '';
+                outcomeImagePreview.style.display = 'none';
+                uploadedImage = null;
+            });
+            
+            closeOutcomeModal.addEventListener('click', function() {
+                learningOutcomeModal.style.display = 'none';
+            });
+            
+            // 图片上传功能
+            outcomeUploadBtn.addEventListener('click', function() {
+                outcomeImageInput.click();
+            });
+            
+            outcomeImageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        uploadedImage = event.target.result;
+                        outcomeImagePreview.src = uploadedImage;
+                        outcomeImagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // 拖拽上传功能
+            outcomeImageUpload.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+            
+            outcomeImageUpload.addEventListener('dragleave', function() {
+                this.classList.remove('dragover');
+            });
+            
+            outcomeImageUpload.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        uploadedImage = event.target.result;
+                        outcomeImagePreview.src = uploadedImage;
+                        outcomeImagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // 保存学习成果
+            saveLearningOutcome.addEventListener('click', function() {
+                const title = outcomeTitle.value;
+                
+                if (title && uploadedImage) {
+                    // 创建学习成果数据
+                    const newOutcome = {
+                        title: title,
+                        image: uploadedImage
+                    };
+                    
+                    // 添加到存储
+                    learningOutcomes.push(newOutcome);
+                    localStorage.setItem('learningOutcomes', JSON.stringify(learningOutcomes));
+                    
+                    // 重新渲染
+                    renderLearningOutcomes();
+                    
+                    // 更新搜索项
+                    updateSearchableItems();
+                    
+                    // 关闭模态框
+                    learningOutcomeModal.style.display = 'none';
+                } else {
+                    alert('请输入标题并上传图片');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
