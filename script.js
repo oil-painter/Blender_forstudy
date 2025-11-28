@@ -615,15 +615,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // 保存学习成果
+    // 保存学习成果 - 简化版本
     saveLearningOutcome.addEventListener('click', function() {
         const title = outcomeTitle.value.trim();
         const editingIndex = learningOutcomeModal.getAttribute('data-editing-index');
-
+        
         console.log('保存按钮被点击'); // 调试信息
         console.log('标题:', title); // 调试信息
         console.log('上传的图片:', uploadedImage ? '存在' : '不存在'); // 调试信息
-        
+    
         // 验证输入
         if (!title) {
             alert('请输入学习成果标题');
@@ -636,48 +636,27 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        if (title && uploadedImage) {
-            console.log('条件满足，开始保存'); // 调试信息
-            
-            if (editingIndex !== null) {
-                // 编辑模式 - 更新现有项
-                const index = parseInt(editingIndex);
-                learningOutcomes[index] = {
-                    title: title,
-                    image: uploadedImage
-                };
-            } else {
-                // 添加模式 - 创建新项
-                const newOutcome = {
-                    title: title,
-                    image: uploadedImage
-                };
-                learningOutcomes.push(newOutcome);
-            }
-            
-            // 更新本地存储
-            localStorage.setItem('learningOutcomes', JSON.stringify(learningOutcomes));
-            
-            // 重新渲染
-            renderLearningOutcomes();
-            
-            // 更新搜索项
-            updateSearchableItems();
-            
-            // 关闭模态框
-            learningOutcomeModal.style.display = 'none';
-            console.log('已关闭模态框'); // 调试信息
-            
-            // 重置编辑状态
-            resetEditState();
+        // 执行保存逻辑
+        if (editingIndex !== null) {
+            // 编辑模式
+            const index = parseInt(editingIndex);
+            learningOutcomes[index] = { title: title, image: uploadedImage };
         } else {
-           if (!title) {
-            alert('请输入标题');
-            } else if (!uploadedImage) {
-                alert('请上传图片');
+            // 添加模式
+            learningOutcomes.push({ title: title, image: uploadedImage });
         }
+        
+        // 保存并更新界面
+        localStorage.setItem('learningOutcomes', JSON.stringify(learningOutcomes));
+        renderLearningOutcomes();
+        updateSearchableItems();
+        
+        // 关闭模态框并重置状态
+        learningOutcomeModal.style.display = 'none';
+        console.log('已关闭模态框'); // 调试信息
+        resetEditState();
     });
-
+    
     // 重置编辑状态
     function resetEditState() {
         learningOutcomeModal.removeAttribute('data-editing-index');
@@ -709,6 +688,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 });
+
 
 
 
