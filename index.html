@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blender入门教程学习笔记</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Blender入门教程</h1>
+            <p class="subtitle">Kurt教程学习笔记</p>
+        </header>
+        
+        <nav>
+            <button class="nav-btn active" data-target="home">首页</button>
+            <button class="nav-btn" data-target="modeling">建模</button>
+            <button class="nav-btn" data-target="lighting">布光</button>
+            <button class="nav-btn" data-target="material">材质</button>
+            <button class="nav-btn" data-target="rendering">渲染</button>
+            <button class="nav-btn" data-target="gallery">学习成果</button>
+            <button class="nav-btn add-section" id="addSectionBtn">+ 新增板块</button>
+        </nav>
+        
+        <!-- 右键菜单 -->
+        <div class="context-menu" id="contextMenu">
+            <div class="context-menu-item" id="renameSection">重命名</div>
+            <div class="context-menu-item delete" id="deleteSection">删除</div>
+        </div>
+        
+        <!-- 新增板块模态框 -->
+        <div class="modal" id="addSectionModal">
+            <div class="modal-content">
+                <h2 class="modal-title">新增板块</h2>
+                <div class="form-group">
+                    <label for="newSectionName">板块名称</label>
+                    <input type="text" id="newSectionName" placeholder="输入板块名称">
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" id="closeSectionModal">取消</button>
+                    <button class="btn btn-primary" id="addNewSection">添加</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 重命名模态框 -->
+        <div class="modal" id="renameModal">
+            <div class="modal-content">
+                <h2 class="modal-title">重命名板块</h2>
+                <div class="form-group">
+                    <label for="renameSectionName">新名称</label>
+                    <input type="text" id="renameSectionName" placeholder="输入新名称">
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" id="closeRenameModal">取消</button>
+                    <button class="btn btn-primary" id="confirmRename">确认</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 学习成果模态框 -->
+        <div class="modal" id="learningOutcomeModal">
+            <div class="modal-content">
+                <h2 class="modal-title">添加学习成果</h2>
+                <div class="form-group">
+                    <label for="outcomeTitle">成果标题</label>
+                    <input type="text" id="outcomeTitle" placeholder="输入学习成果标题">
+                </div>
+                <div class="form-group">
+                    <label>上传成果图片</label>
+                    <div class="image-upload-container" id="outcomeImageUpload">
+                        <div class="upload-icon">📁</div>
+                        <p class="upload-text">拖拽图片到这里或点击上传</p>
+                        <button class="upload-btn" id="outcomeUploadBtn">选择图片</button>
+                        <input type="file" id="outcomeImageInput" accept="image/*" style="display: none;">
+                        <img id="outcomeImagePreview" class="image-preview" src="" alt="预览">
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" id="closeOutcomeModal">取消</button>
+                    <button class="btn btn-primary" id="saveLearningOutcome">保存</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索快捷键、关键词或学习成果...">
+                <button id="searchButton">搜索</button>
+            </div>
+            <div class="search-results" id="searchResults"></div>
+        </div>
+        
+        <!-- 首页内容 -->
+        <section id="home" class="content-section active">
+            <h2 class="section-title">基础概念与工作流</h2>
+            
+            <div class="key-point">
+                <h3><span class="number">01</span> 重要概念</h3>
+                <ul>
+                    <li>窗口面板可拆分，可互换</li>
+                    <li>游标可以用来定位和输出点</li>
+                    <li>每个物体都有原点，在3D世界的计算机眼里，原点就是储存物体信息的数据点</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">基本 Workflow</h3>
+            <div class="workflow-steps">
+                <div class="step-card" data-target="modeling">
+                    <div class="step-icon">📐</div>
+                    <div class="step-title">建模</div>
+                    <div class="step-desc">创建3D模型的基本形状和结构</div>
+                </div>
+                <div class="step-card" data-target="lighting">
+                    <div class="step-icon">💡</div>
+                    <div class="step-title">布光</div>
+                    <div class="step-desc">设置场景中的光源和照明效果</div>
+                </div>
+                <div class="step-card" data-target="material">
+                    <div class="step-icon">🎨</div>
+                    <div class="step-title">材质</div>
+                    <div class="step-desc">为模型添加表面属性和纹理</div>
+                </div>
+                <div class="step-card" data-target="rendering">
+                    <div class="step-icon">📷</div>
+                    <div class="step-title">渲染</div>
+                    <div class="step-desc">生成最终的图像或动画</div>
+                </div>
+            </div>
+            
+            <div class="kur-tips">
+                <strong>KurTips:</strong> 记住基础概念有助于理解Blender的工作方式
+            </div>
+        </section>
+        
+        <!-- 建模板块 -->
+        <section id="modeling" class="content-section">
+            <h2 class="section-title">建模</h2>
+            
+            <div class="key-point">
+                <h3><span class="number">01</span> 建模基础</h3>
+                <ul>
+                    <li>了解基本几何体：立方体、球体、圆柱体等</li>
+                    <li>掌握编辑模式：顶点、边、面的编辑</li>
+                    <li>使用修改器：阵列、倒角、细分曲面等</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">快捷键大全</h3>
+            <div class="subsection-content">
+                <div class="shortcut-category">
+                    <h3 class="subsubsection-title">视图控制</h3>
+                    <div class="subsubsection-content">
+                        <div class="shortcut-grid">
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">旋转视角</span>
+                                <span class="shortcut">鼠标中键</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">平移视角</span>
+                                <span class="shortcut">Shift + 鼠标中键</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">缩放视角</span>
+                                <span class="shortcut">滚动鼠标中键</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">顶视图</span>
+                                <span class="shortcut">7</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">底视图</span>
+                                <span class="shortcut">Ctrl+7</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">前视图</span>
+                                <span class="shortcut">1</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">后视图</span>
+                                <span class="shortcut">Ctrl+1</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">右视图</span>
+                                <span class="shortcut">3</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">左视图</span>
+                                <span class="shortcut">Ctrl+3</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">反转当前视图</span>
+                                <span class="shortcut">9</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">切换摄像机视角</span>
+                                <span class="shortcut">0</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">切换摄像机和正交投影</span>
+                                <span class="shortcut">5</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">角度微调</span>
+                                <span class="shortcut">2,4,6,8</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">缩放微调</span>
+                                <span class="shortcut">+,-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="shortcut-category">
+                    <h3 class="subsubsection-title">物体控制</h3>
+                    <div class="subsubsection-content">
+                        <div class="shortcut-grid">
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">移动物体</span>
+                                <span class="shortcut">G</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">旋转物体</span>
+                                <span class="shortcut">R</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">缩放物体</span>
+                                <span class="shortcut">S</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">恢复移动</span>
+                                <span class="shortcut">Alt+G</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">恢复旋转</span>
+                                <span class="shortcut">Alt+R</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">恢复缩放</span>
+                                <span class="shortcut">Alt+S</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">精确移动</span>
+                                <span class="shortcut">G + Ctrl</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">按轴移动</span>
+                                <span class="shortcut">G + X/Y/Z</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">按面移动</span>
+                                <span class="shortcut">G + 两次X/Y/Z</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="shortcut-category">
+                    <h3 class="subsubsection-title">常用操作</h3>
+                    <div class="subsubsection-content">
+                        <div class="shortcut-grid">
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">新建物体</span>
+                                <span class="shortcut">Shift+A</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">复制物体</span>
+                                <span class="shortcut">Shift+D</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">删除物体</span>
+                                <span class="shortcut">X / Delete</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">隐藏物体</span>
+                                <span class="shortcut">H</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">显示隐藏物体</span>
+                                <span class="shortcut">Alt+H</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">隐藏未选中物体</span>
+                                <span class="shortcut">Shift+H</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">选择物体(刷选)</span>
+                                <span class="shortcut">C</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">全选</span>
+                                <span class="shortcut">A</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="shortcut-category">
+                    <h3 class="subsubsection-title">游标与窗口</h3>
+                    <div class="subsubsection-content">
+                        <div class="shortcut-grid">
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">调用游标Pie目录</span>
+                                <span class="shortcut">Shift+S</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">游标恢复到世界中心</span>
+                                <span class="shortcut">Shift+C</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">移动游标</span>
+                                <span class="shortcut">Shift+右键</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-desc">最大化窗口</span>
+                                <span class="shortcut">Ctrl+空格</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="kur-tips">
+                    <strong>KurTips:</strong> 按住Shift可以加速或减速操作，记住常用快捷键可以大大提高工作效率
+                </div>
+            </div>
+            
+            <h3 class="subsection-title">建模技巧</h3>
+            <div class="subsection-content">
+                <ul>
+                    <li>使用参考图像辅助建模</li>
+                    <li>合理使用细分曲面修改器</li>
+                    <li>掌握环切工具(Ctrl+R)的使用</li>
+                    <li>了解网格拓扑的重要性</li>
+                </ul>
+            </div>
+            
+            <a href="#" class="back-btn" data-target="home">返回首页</a>
+        </section>
+        
+        <!-- 布光板块 -->
+        <section id="lighting" class="content-section">
+            <h2 class="section-title">布光</h2>
+            
+            <div class="key-point">
+                <h3><span class="number">01</span> 布光基础</h3>
+                <ul>
+                    <li>了解不同类型的光源：点光、日光、聚光灯等</li>
+                    <li>掌握三点照明法：主光、补光、背光</li>
+                    <li>学习使用HDRI环境贴图</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">布光技巧</h3>
+            <div class="subsection-content">
+                <ul>
+                    <li>使用区域光创建柔和阴影</li>
+                    <li>通过调整光强度、颜色和温度创造氛围</li>
+                    <li>利用光程控制实现特殊效果</li>
+                </ul>
+            </div>
+            
+            <a href="#" class="back-btn" data-target="home">返回首页</a>
+        </section>
+        
+        <!-- 材质板块 -->
+        <section id="material" class="content-section">
+            <h2 class="section-title">材质</h2>
+            
+            <div class="key-point">
+                <h3><span class="number">01</span> 材质基础</h3>
+                <ul>
+                    <li>了解BSDF着色器：原理化BSDF、光泽BSDF等</li>
+                    <li>掌握材质节点的连接方式</li>
+                    <li>学习使用纹理贴图：漫反射、法线、粗糙度等</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">材质技巧</h3>
+            <div class="subsection-content">
+                <ul>
+                    <li>使用混合着色器创建复杂材质</li>
+                    <li>通过映射和纹理坐标控制纹理位置</li>
+                    <li>利用程序纹理减少贴图依赖</li>
+                </ul>
+            </div>
+            
+            <a href="#" class="back-btn" data-target="home">返回首页</a>
+        </section>
+        
+        <!-- 渲染板块 -->
+        <section id="rendering" class="content-section">
+            <h2 class="section-title">渲染</h2>
+            
+            <div class="key-point">
+                <h3><span class="number">01</span> 渲染基础</h3>
+                <ul>
+                    <li>了解不同渲染引擎：Eevee、Cycles</li>
+                    <li>掌握渲染设置：采样、光照、输出等</li>
+                    <li>学习渲染层和合成器的使用</li>
+                </ul>
+            </div>
+            
+            <h3 class="subsection-title">渲染技巧</h3>
+            <div class="subsection-content">
+                <ul>
+                    <li>使用降噪器提高渲染质量</li>
+                    <li>通过调整采样设置平衡渲染速度和质量</li>
+                    <li>利用渲染通道进行后期处理</li>
+                </ul>
+            </div>
+            
+            <a href="#" class="back-btn" data-target="home">返回首页</a>
+        </section>
+        
+        <!-- 学习成果板块 -->
+        <section id="gallery" class="content-section">
+            <h2 class="section-title">学习成果</h2>
+            
+            <button class="btn btn-primary" id="addLearningOutcome" style="margin-bottom: 20px;">添加学习成果</button>
+            
+            <div class="learning-gallery" id="learningGallery">
+                <!-- 动态添加的学习成果卡片将出现在这里 -->
+            </div>
+            
+            <a href="#" class="back-btn" data-target="home">返回首页</a>
+        </section>
+        
+        <!-- 动态添加的内容板块将出现在这里 -->
+        
+        <footer>
+            <p>Blender学习笔记 &copy; 2023 | 持续更新中</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
