@@ -617,10 +617,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 保存学习成果
     saveLearningOutcome.addEventListener('click', function() {
-        const title = outcomeTitle.value;
+        const title = outcomeTitle.value.trim();
         const editingIndex = learningOutcomeModal.getAttribute('data-editing-index');
+
+        console.log('保存按钮被点击'); // 调试信息
+        console.log('标题:', title); // 调试信息
+        console.log('上传的图片:', uploadedImage ? '存在' : '不存在'); // 调试信息
+        
+        // 验证输入
+        if (!title) {
+            alert('请输入学习成果标题');
+            outcomeTitle.focus();
+            return;
+        }
+        
+        if (!uploadedImage) {
+            alert('请上传学习成果图片');
+            return;
+        }
         
         if (title && uploadedImage) {
+            console.log('条件满足，开始保存'); // 调试信息
+            
             if (editingIndex !== null) {
                 // 编辑模式 - 更新现有项
                 const index = parseInt(editingIndex);
@@ -648,11 +666,15 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // 关闭模态框
             learningOutcomeModal.style.display = 'none';
+            console.log('已关闭模态框'); // 调试信息
             
             // 重置编辑状态
             resetEditState();
         } else {
-            alert('请输入标题并上传图片');
+           if (!title) {
+            alert('请输入标题');
+            } else if (!uploadedImage) {
+                alert('请上传图片');
         }
     });
 
@@ -678,7 +700,15 @@ document.addEventListener('DOMContentLoaded', function() {
         resetEditState(); // 重置编辑状态
     });
 
+    // 点击模态框外部关闭
+    learningOutcomeModal.addEventListener('click', function(e) {
+        if (e.target === learningOutcomeModal) {
+            learningOutcomeModal.style.display = 'none';
+            resetEditState();
+        }
+    });
 
 });
+
 
 
