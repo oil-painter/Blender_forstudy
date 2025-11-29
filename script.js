@@ -165,20 +165,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 删除学习成果
     async function deleteLearningOutcome(index) {
-        if (confirm('确定要删除这个学习成果吗？')) {
+        if (!confirm('确定要删除这个学习成果吗？')) {
+            return;
+        }
+        
+        const outcomeToDelete = learningOutcomes[index];
+        console.log('开始删除学习成果:', index, outcomeToDelete);
+        
+        try {
+            // 如果有 GitHub 配置且图片是 GitHub URL，删除图片文件
+            if (githubConfig && outcomeToDelete.image && outcomeToDelete.image.includes('github.com')) {
+                console.log('尝试删除 GitHub 图片...');
+                await deleteImageFromGitHub(outcomeToDelete);
+            } else {
+                console.log('跳过图片删除（非 GitHub 图片或未配置 GitHub）');
+            }
+            
             // 从数组中删除指定项
             learningOutcomes.splice(index, 1);
             
             // 更新本地存储
             localStorage.setItem('learningOutcomes', JSON.stringify(learningOutcomes));
             
-            try {
-                // 同步到 GitHub
+            // 同步到 GitHub
+            if (githubConfig) {
+                console.log('同步数据到 GitHub...');
                 await syncLearningOutcomesToGitHub();
-                addSyncHistory('success', '学习成果已删除并同步');
-            } catch (error) {
-                console.error('GitHub同步失败:', error);
-                alert('删除成功，但GitHub同步失败: ' + error.message);
+                addSyncHistory('success', '学习成果和图片已删除并同步');
+            } else {
+                addSyncHistory('success', '学习成果已删除');
             }
             
             // 重新渲染
@@ -188,7 +203,162 @@ document.addEventListener('DOMContentLoaded', function() {
             updateSearchableItems();
             
             alert('删除成功！');
+            
+        } catch (error) {
+            console.error('删除过程失败:', error);
+            
+            // 即使图片删除失败，也继续删除数据记录
+            learningOutcomes.splice(index, 1);
+            localStorage.setItem('learningOutcomes', JSON.stringify(learningOutcomes));
+            
+            if (githubConfig) {
+                try {
+                    await syncLearningOutcomesToGitHub();
+                    addSyncHistory('warning', '学习成果已删除，但图片删除失败: ' + error.message);
+                } catch (syncError) {
+                    console.error('数据同步也失败:', syncError);
+                    addSyncHistory('error', '学习成果删除不完整: ' + syncError.message);
+                }
+            }
+            
+            alert('学习成果已从数据中删除，但图片删除失败: ' + error.message);
         }
+    }
+
+    // 从 GitHub 删除图片文件,添加详细日志
+    async function deleteImageFromGitHub(outcome) {
+        if (!githubConfig) {
+            throw new Error('GitHub 配置不存在');
+        }
+        
+        console.log('开始删除图片处理:', outcome);
+        
+        // 确定文件路径
+        let filePath = outcome.imagePath;
+        
+        // 如果没有存储的路径，尝试从 URL 提取
+        if (!filePath && outcome.image) {
+            console.log('从 URL 提取文件路径:', outcome.image);
+            
+            if (outcome.image.includes('raw.githubusercontent.com')) {
+                const urlParts = outcome.image.split('/');
+                const imagesIndex = urlParts.indexOf('images');
+                if (imagesIndex !== -1) {
+                    filePath = urlParts.slice(imagesIndex).join('/');
+                    console.log('提取的文件路径:', filePath);
+                }
+            } else if (outcome.image.includes('github.com') && outcome.image.includes('/contents/')) {
+                // 处理 GitHub 内容 URL
+                const urlObj = new URL(outcome.image);
+                filePath = urlObj.pathname.split('/contents/')[1];
+                console.log('从内容 URL 提取的文件路径:', filePath);
+            }
+        }
+        
+        if (!filePath) {
+            console.warn('无法确定图片文件路径:', outcome);
+            throw new Error('无法确定要删除的图片文件路径');
+        }
+        
+        try {
+            console.log('准备删除图片文件:', filePath);
+            
+            // 第一步：获取文件信息
+            const fileInfoUrl = `https://api.github.com/repos/${githubConfig.repo}/contents/${filePath}`;
+            console.log('获取文件信息的 URL:', fileInfoUrl);
+            
+            const fileResponse = await fetch(fileInfoUrl, {
+                headers: {
+                    'Authorization': `Bearer ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            
+            console.log('文件信息响应状态:', fileResponse.status);
+            
+            if (!fileResponse.ok) {
+                if (fileResponse.status === 404) {
+                    console.log('图片文件不存在，无需删除');
+                    return; // 文件不存在，直接返回成功
+                }
+                
+                let errorMessage = `获取文件信息失败: ${fileResponse.status}`;
+                try {
+                    const errorData = await fileResponse.json();
+                    errorMessage += ` - ${errorData.message}`;
+                    console.error('GitHub API 错误详情:', errorData);
+                } catch (e) {
+                    // 忽略 JSON 解析错误
+                }
+                throw new Error(errorMessage);
+            }
+            
+            const fileData = await fileResponse.json();
+            console.log('获取到的文件信息:', fileData);
+            
+            const fileSha = fileData.sha;
+            if (!fileSha) {
+                throw new Error('无法获取文件 SHA');
+            }
+            
+            console.log('获取到文件 SHA:', fileSha);
+            
+            // 第二步：删除文件
+            const deleteUrl = `https://api.github.com/repos/${githubConfig.repo}/contents/${filePath}`;
+            console.log('删除文件的 URL:', deleteUrl);
+            
+            const deleteResponse = await fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Delete learning outcome image: ${filePath.split('/').pop()}`,
+                    sha: fileSha,
+                    branch: githubConfig.branch || 'main'
+                })
+            });
+            
+            console.log('删除响应状态:', deleteResponse.status);
+            
+            if (!deleteResponse.ok) {
+                let errorMessage = `删除文件失败: ${deleteResponse.status}`;
+                try {
+                    const errorData = await deleteResponse.json();
+                    errorMessage += ` - ${errorData.message}`;
+                    console.error('删除失败详情:', errorData);
+                } catch (e) {
+                    // 忽略 JSON 解析错误
+                }
+                throw new Error(errorMessage);
+            }
+            
+            const deleteResult = await deleteResponse.json();
+            console.log('删除成功:', deleteResult);
+            
+            addSyncHistory('success', '图片文件已删除', `文件: ${filePath}`);
+            
+        } catch (error) {
+            console.error('图片删除完整错误:', error);
+            throw error;
+        }
+    }
+
+    // 辅助函数：从 URL 中提取文件路径
+    function extractFilePathFromUrl(imageUrl) {
+        if (!imageUrl) return null;
+        
+        if (imageUrl.includes('raw.githubusercontent.com')) {
+            const urlParts = imageUrl.split('/');
+            const imagesIndex = urlParts.indexOf('images');
+            if (imagesIndex !== -1) {
+                return urlParts.slice(imagesIndex).join('/');
+            }
+        }
+        
+        return null;
     }
 
     // 编辑学习成果
@@ -325,7 +495,46 @@ document.addEventListener('DOMContentLoaded', function() {
                     syncBtn.disabled = false;
                 }
             });
+
         }
+        
+        // 添加手动清理按钮
+        const cleanupOrphanImages = document.createElement('button');
+        cleanupOrphanImages.className = 'btn btn-warning';
+        cleanupOrphanImages.textContent = '清理孤立图片';
+        cleanupOrphanImages.id = 'cleanupOrphanImages';
+        
+        // 插入到同步操作按钮中
+        document.querySelector('.sync-actions').appendChild(cleanupOrphanImages);
+        
+        // 添加事件监听
+        cleanupOrphanImages.addEventListener('click', async function() {
+            if (!githubConfig) {
+                alert('请先配置 GitHub 同步设置');
+                return;
+            }
+            
+            if (!confirm('这将扫描并删除所有不再被学习成果引用的图片文件。确定要继续吗？')) {
+                return;
+            }
+            
+            const cleanupBtn = cleanupOrphanImages;
+            const originalText = cleanupBtn.textContent;
+            cleanupBtn.textContent = '清理中...';
+            cleanupBtn.disabled = true;
+            
+            try {
+                await cleanupOrphanedImages();
+                alert('孤立图片清理完成！');
+            } catch (error) {
+                console.error('清理失败:', error);
+                alert('清理失败: ' + error.message);
+            } finally {
+                cleanupBtn.textContent = originalText;
+                cleanupBtn.disabled = false;
+            }
+        });
+    
     }
 
     // 更新同步状态显示
@@ -710,24 +919,32 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             let imageUrl = uploadedImage;
-            
+            let imagePath = null; // 新增：记录图片路径
+
             // 如果是 base64 图片且配置了GitHub，上传到 GitHub
             if (uploadedImage.startsWith('data:image') && githubConfig) {
                 const filename = `outcome-${Date.now()}.png`;
                 console.log('上传图片到 GitHub:', filename);
                 imageUrl = await uploadImageToGitHub(uploadedImage, filename);
+                imagePath = `images/${filename}`; // 记录路径用于后续删除
                 addSyncHistory('success', '图片上传成功', `文件: ${filename}`);
             }
 
-            // 更新学习成果数据
+            // 更新学习成果数据，同时存储图片路径
+            const outcomeData = { 
+                title: title, 
+                image: imageUrl,
+                imagePath: imagePath // 新增：存储图片路径
+            };
+
             if (editingIndex !== null) {
                 // 编辑模式
                 const index = parseInt(editingIndex);
-                learningOutcomes[index] = { title: title, image: imageUrl };
+                learningOutcomes[index] = outcomeData;
                 console.log('更新学习成果:', index, title);
             } else {
                 // 添加模式
-                learningOutcomes.push({ title: title, image: imageUrl });
+                learningOutcomes.push(outcomeData);
                 console.log('添加新学习成果:', title);
             }
             
@@ -901,6 +1118,101 @@ document.addEventListener('DOMContentLoaded', function() {
             syncBtn.disabled = false;
         }
     });
+
+
+    // 清理孤立图片函数
+    async function cleanupOrphanedImages() {
+        if (!githubConfig) {
+            throw new Error('GitHub 配置不存在');
+        }
+        
+        console.log('开始清理孤立图片...');
+        
+        try {
+            // 获取 images 文件夹内容
+            const imagesUrl = `https://api.github.com/repos/${githubConfig.repo}/contents/images`;
+            const imagesResponse = await fetch(imagesUrl, {
+                headers: {
+                    'Authorization': `Bearer ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            
+            if (!imagesResponse.ok) {
+                if (imagesResponse.status === 404) {
+                    console.log('images 文件夹不存在，无需清理');
+                    addSyncHistory('info', '清理完成', 'images 文件夹不存在');
+                    return;
+                }
+                throw new Error(`获取 images 文件夹失败: ${imagesResponse.status}`);
+            }
+            
+            const imagesData = await imagesResponse.json();
+            console.log('找到的图片文件:', imagesData);
+            
+            // 收集所有学习成果中使用的图片路径
+            const usedImagePaths = new Set();
+            learningOutcomes.forEach(outcome => {
+                if (outcome.imagePath) {
+                    usedImagePaths.add(outcome.imagePath);
+                }
+            });
+            
+            console.log('正在使用的图片路径:', usedImagePaths);
+            
+            let deletedCount = 0;
+            let errorCount = 0;
+            
+            // 检查每个图片文件是否还在使用
+            for (const imageFile of imagesData) {
+                if (imageFile.type !== 'file') continue;
+                
+                const imagePath = `images/${imageFile.name}`;
+                
+                if (!usedImagePaths.has(imagePath)) {
+                    console.log(`发现孤立图片: ${imagePath}`);
+                    
+                    try {
+                        // 删除孤立图片
+                        const deleteUrl = `https://api.github.com/repos/${githubConfig.repo}/contents/${imagePath}`;
+                        const deleteResponse = await fetch(deleteUrl, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${githubConfig.token}`,
+                                'Accept': 'application/vnd.github.v3+json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                message: `Cleanup orphaned image: ${imageFile.name}`,
+                                sha: imageFile.sha,
+                                branch: githubConfig.branch || 'main'
+                            })
+                        });
+                        
+                        if (deleteResponse.ok) {
+                            console.log(`成功删除孤立图片: ${imagePath}`);
+                            deletedCount++;
+                        } else {
+                            console.error(`删除孤立图片失败: ${imagePath}`, deleteResponse.status);
+                            errorCount++;
+                        }
+                    } catch (error) {
+                        console.error(`删除孤立图片异常: ${imagePath}`, error);
+                        errorCount++;
+                    }
+                }
+            }
+            
+            addSyncHistory('success', '孤立图片清理完成', `删除了 ${deletedCount} 个文件，${errorCount} 个错误`);
+            console.log(`清理完成: 删除了 ${deletedCount} 个孤立图片，${errorCount} 个错误`);
+            
+        } catch (error) {
+            console.error('清理过程失败:', error);
+            addSyncHistory('error', '孤立图片清理失败', error.message);
+            throw error;
+        }
+    }
+
 
 
     // 导航按钮点击事件
