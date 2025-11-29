@@ -427,11 +427,11 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('lastSyncTime', now);
         updateSyncStatus();
     }
-
+ 
     // GitHub 错误处理函数
     function handleGitHubError(error) {
         console.error('GitHub错误:', error);
-        
+
         if (error.message.includes('401') || error.message.includes('Bad credentials')) {
             addSyncHistory('error', 'Token已过期或无效', '请重新配置GitHub Token');
             setTimeout(() => {
@@ -441,26 +441,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 1000);
             return 'Token已过期或无效，请重新配置';
         }
-        
+
         if (error.message.includes('403')) {
-            return '权限不足，请检查Token是否具有repo权限';
+            return '权限不足，请检查Token是否具有repo权限，或者仓库是否为私有仓库（Token需要具有访问私有仓库的权限）';
         }
-        
+
         if (error.message.includes('404')) {
-            return '仓库不存在或无法访问';
+            return '仓库不存在或无法访问，请检查仓库名是否正确（格式：用户名/仓库名）';
         }
-        
-        if (error.message.includes('422')) {
-            return '数据格式错误或冲突';
-        }
-        
+
         if (error.message.includes('network') || error.message.includes('Failed to fetch')) {
             return '网络连接失败，请检查网络设置';
         }
-        
+
         return error.message || '未知错误';
     }
-    
+
     // 从 GitHub 同步数据到本地
     async function syncFromGitHub() {
         if (!githubConfig) return;
@@ -478,7 +474,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 修改现有的 GitHub 设置保存函数
+    // GitHub 设置保存函数
     saveGithubSetup.addEventListener('click', function() {
         const token = githubToken.value.trim();
         const repo = githubRepo.value.trim();
@@ -517,29 +513,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         try {
-            // 将 base64 数据转换为 blob
-            const fetchResponse = await fetch(imageData);
-            const blob = await fetchResponse.blob();
+            // 直接使用 base64 数据，无需转换
+            const base64Content = imageData.split(',')[1];
             
-            // 准备上传
+            if (!base64Content) {
+                throw new Error('图片数据格式错误');
+            }
+            
             const path = `images/${filename}`;
             const apiUrl = `https://api.github.com/repos/${githubConfig.repo}/contents/${path}`;
-            
-            // 将 blob 转换为 base64
-            const base64Content = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            });
             
             const commitMessage = `Add learning outcome image: ${filename}`;
             
             const uploadData = {
                 message: commitMessage,
                 content: base64Content,
-                branch: githubConfig.branch
+                branch: githubConfig.branch || 'main'
             };
+            
+            console.log('上传图片到:', apiUrl);
             
             const uploadResponse = await fetch(apiUrl, {
                 method: 'PUT',
@@ -551,14 +543,17 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             if (!uploadResponse.ok) {
-                const errorData = await uploadResponse.json().catch(() => ({}));
-                throw new Error(errorData.message || `上传失败: ${uploadResponse.status}`);
+                const errorText = await uploadResponse.text();
+                console.error('上传响应错误:', uploadResponse.status, errorText);
+                throw new Error(`上传失败: ${uploadResponse.status} - ${errorText}`);
             }
             
             const result = await uploadResponse.json();
+            console.log('图片上传成功:', result);
             return result.content.download_url;
             
         } catch (error) {
+            console.error('图片上传完整错误:', error);
             throw new Error(`图片上传失败: ${error.message}`);
         }
     }
@@ -569,10 +564,10 @@ document.addEventListener('DOMContentLoaded', function() {
             githubSetupModal.style.display = 'flex';
             throw new Error('请先完成 GitHub 同步设置');
         }
-        
+
         const apiUrl = `https://api.github.com/repos/${githubConfig.repo}/contents/data/learning-outcomes.json`;
         const commitMessage = `Update learning outcomes: ${new Date().toLocaleString()}`;
-        
+
         try {
             // 获取当前文件 SHA（如果存在）
             let sha = null;
@@ -582,25 +577,37 @@ document.addEventListener('DOMContentLoaded', function() {
                         'Authorization': `token ${githubConfig.token}`,
                     }
                 });
+                
                 if (currentFileResponse.ok) {
                     const fileData = await currentFileResponse.json();
                     sha = fileData.sha;
+                    console.log('获取到文件 SHA:', sha);
+                } else if (currentFileResponse.status !== 404) {
+                    // 404 是正常的，文件不存在
+                    throw new Error(`获取文件失败: ${currentFileResponse.status}`);
                 }
             } catch (error) {
-                // 文件不存在，正常创建
+                if (!error.message.includes('404')) {
+                    console.error('获取 SHA 错误:', error);
+                    throw error;
+                }
             }
             
-            const content = btoa(JSON.stringify(learningOutcomes, null, 2));
+            // 确保数据是有效的 JSON
+            const jsonData = JSON.stringify(learningOutcomes, null, 2);
+            const content = btoa(unescape(encodeURIComponent(jsonData)));
             
             const uploadData = {
                 message: commitMessage,
                 content: content,
-                branch: githubConfig.branch
+                branch: githubConfig.branch || 'main'
             };
             
             if (sha) {
                 uploadData.sha = sha;
             }
+            
+            console.log('同步数据到 GitHub:', uploadData);
             
             const syncResponse = await fetch(apiUrl, {
                 method: 'PUT',
@@ -612,13 +619,17 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             if (!syncResponse.ok) {
-                const errorData = await syncResponse.json().catch(() => ({}));
-                throw new Error(errorData.message || `同步失败: ${syncResponse.status}`);
+                const errorText = await syncResponse.text();
+                console.error('同步响应错误:', syncResponse.status, errorText);
+                throw new Error(`同步失败: ${syncResponse.status} - ${errorText}`);
             }
             
+            const result = await syncResponse.json();
+            console.log('数据同步成功:', result);
             return true;
             
         } catch (error) {
+            console.error('数据同步完整错误:', error);
             throw new Error(`数据同步失败: ${error.message}`);
         }
     }
@@ -626,13 +637,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // 从 GitHub 加载学习成果
     async function loadLearningOutcomesFromGitHub() {
         if (!githubConfig) {
-            // 如果没有配置，使用本地数据
+            console.log('未配置 GitHub，使用本地数据');
             return JSON.parse(localStorage.getItem('learningOutcomes')) || [];
         }
         
         try {
             const apiUrl = `https://api.github.com/repos/${githubConfig.repo}/contents/data/learning-outcomes.json`;
-            const loadResponse = await fetch(apiUrl, { // 重命名为 loadResponse
+            console.log('从 GitHub 加载数据:', apiUrl);
+            
+            const loadResponse = await fetch(apiUrl, {
                 headers: {
                     'Authorization': `token ${githubConfig.token}`,
                 }
@@ -640,22 +653,28 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (loadResponse.ok) {
                 const fileData = await loadResponse.json();
-                const content = JSON.parse(atob(fileData.content));
+                const content = decodeURIComponent(escape(atob(fileData.content)));
+                const parsedData = JSON.parse(content);
+                
+                console.log('从 GitHub 加载到数据:', parsedData);
                 
                 // 同时更新本地存储
-                localStorage.setItem('learningOutcomes', JSON.stringify(content));
-                return content;
+                localStorage.setItem('learningOutcomes', JSON.stringify(parsedData));
+                return parsedData;
+            } else if (loadResponse.status === 404) {
+                console.log('GitHub 上尚未有数据文件，使用本地数据');
+                return JSON.parse(localStorage.getItem('learningOutcomes')) || [];
             } else {
-                throw new Error('数据文件不存在');
+                throw new Error(`HTTP ${loadResponse.status}: ${loadResponse.statusText}`);
             }
         } catch (error) {
-            console.error('从GitHub加载失败:', error);
-            // 回退到localStorage
+            console.error('从 GitHub 加载失败:', error);
+            // 回退到 localStorage
             return JSON.parse(localStorage.getItem('learningOutcomes')) || [];
         }
     }
 
-    // 保存学习成果 - 集成 GitHub 同步
+    // 保存学习成果 - 集成 GitHub 同步，添加调试信息
     saveLearningOutcome.addEventListener('click', async function() {
         const title = outcomeTitle.value.trim();
         const editingIndex = learningOutcomeModal.getAttribute('data-editing-index');
@@ -678,21 +697,24 @@ document.addEventListener('DOMContentLoaded', function() {
         saveBtn.disabled = true;
 
         try {
+            console.log('开始保存学习成果...');
+            
             // 如果有GitHub配置，先同步最新数据
             if (githubConfig) {
                 try {
+                    console.log('从 GitHub 同步最新数据...');
                     await syncFromGitHub();
                 } catch (syncError) {
                     console.warn('同步最新数据失败，继续保存本地:', syncError);
                 }
             }
 
-            //再上传
             let imageUrl = uploadedImage;
-             
+            
             // 如果是 base64 图片且配置了GitHub，上传到 GitHub
             if (uploadedImage.startsWith('data:image') && githubConfig) {
                 const filename = `outcome-${Date.now()}.png`;
+                console.log('上传图片到 GitHub:', filename);
                 imageUrl = await uploadImageToGitHub(uploadedImage, filename);
                 addSyncHistory('success', '图片上传成功', `文件: ${filename}`);
             }
@@ -702,16 +724,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 // 编辑模式
                 const index = parseInt(editingIndex);
                 learningOutcomes[index] = { title: title, image: imageUrl };
+                console.log('更新学习成果:', index, title);
             } else {
                 // 添加模式
                 learningOutcomes.push({ title: title, image: imageUrl });
+                console.log('添加新学习成果:', title);
             }
             
             // 保存到 localStorage
             localStorage.setItem('learningOutcomes', JSON.stringify(learningOutcomes));
+            console.log('保存到本地存储完成');
             
             // 如果有GitHub配置，同步到 GitHub
             if (githubConfig) {
+                console.log('同步数据到 GitHub...');
                 await syncLearningOutcomesToGitHub();
                 updateLastSyncTime();
             }
@@ -727,6 +753,7 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('保存成功！' + (githubConfig ? '已同步到GitHub。' : ''));
             
         } catch (error) {
+            console.error('保存失败完整错误:', error);
             const errorMessage = handleGitHubError(error);
             alert(`保存失败: ${errorMessage}`);
         } finally {
@@ -790,29 +817,55 @@ document.addEventListener('DOMContentLoaded', function() {
         testBtn.textContent = '测试中...';
         testBtn.disabled = true;
         
+        // 添加加载状态样式
+        testBtn.classList.add('loading');
+        
         try {
             // 测试获取仓库信息
             const apiUrl = `https://api.github.com/repos/${githubConfig.repo}`;
             const testResponse = await fetch(apiUrl, {
                 headers: {
                     'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
                 }
             });
             
             if (testResponse.ok) {
                 const repoInfo = await testResponse.json();
-                addSyncHistory('success', '连接测试成功', `仓库: ${repoInfo.full_name}`);
+                addSyncHistory('success', '连接测试成功', `仓库: ${repoInfo.full_name}, 默认分支: ${repoInfo.default_branch}`);
+                
+                // 额外测试写入权限
+                await testWritePermission();
+                
                 alert('连接测试成功！GitHub同步配置正常。');
+                
             } else {
-                throw new Error(`HTTP ${testResponse.status}: ${testResponse.statusText}`);
+                let errorDetail = '';
+                switch (testResponse.status) {
+                    case 401:
+                        errorDetail = 'Token无效或已过期';
+                        break;
+                    case 403:
+                        errorDetail = '权限不足，Token可能需要repo权限';
+                        break;
+                    case 404:
+                        errorDetail = `仓库 "${githubConfig.repo}" 不存在，请检查仓库名格式（用户名/仓库名）`;
+                        break;
+                    default:
+                        errorDetail = `HTTP ${testResponse.status}: ${testResponse.statusText}`;
+                }
+                throw new Error(errorDetail);
             }
         } catch (error) {
             const errorMessage = handleGitHubError(error);
             addSyncHistory('error', '连接测试失败', errorMessage);
             alert('连接测试失败: ' + errorMessage);
         } finally {
+            // 确保无论成功还是失败都会恢复按钮状态
             testBtn.textContent = originalText;
             testBtn.disabled = false;
+            testBtn.classList.remove('loading');
+            console.log('测试按钮状态已恢复'); // 调试信息
         }
     });
 
@@ -848,9 +901,6 @@ document.addEventListener('DOMContentLoaded', function() {
             syncBtn.disabled = false;
         }
     });
-
-
-
 
 
     // 导航按钮点击事件
